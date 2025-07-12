@@ -1,5 +1,6 @@
 package com.example.order.controller;
 
+import com.example.order.application.OrderCoordinator;
 import com.example.order.application.OrderService;
 import com.example.order.application.RedisLockService;
 import com.example.order.application.dto.CreateOrderResult;
@@ -15,10 +16,13 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    private final OrderCoordinator orderCoordinator;
+
     private final RedisLockService redisLockService;
 
-    public OrderController(OrderService orderService, RedisLockService redisLockService) {
+    public OrderController(OrderService orderService, OrderCoordinator orderCoordinator, RedisLockService redisLockService) {
         this.orderService = orderService;
+        this.orderCoordinator = orderCoordinator;
         this.redisLockService = redisLockService;
     }
 
@@ -33,7 +37,7 @@ public class OrderController {
     public void placeOrder(
             @RequestBody PlaceOrderRequest request
     ) {
-        String key = "order:monolithic:" + request.orderId();
+        String key = "order:" + request.orderId();
         boolean acquiredLock = redisLockService.tryLock(key, request.orderId().toString());
 
         if (!acquiredLock) {
@@ -41,7 +45,7 @@ public class OrderController {
         }
 
         try {
-
+            orderCoordinator.placeOrder(request.toCommand());
         } finally {
             redisLockService.releaseLock(key);
         }
