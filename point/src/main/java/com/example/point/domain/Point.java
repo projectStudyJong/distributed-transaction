@@ -13,6 +13,9 @@ public class Point {
 
     private Long amount;
 
+    @Version
+    private Long version;
+
     public Point() {
     }
 
@@ -27,5 +30,13 @@ public class Point {
         }
 
         this.amount = this.amount - amount;
+    }
+
+    public void cancel(Long amount) {
+        this.amount = this.amount + amount;
+    }
+
+    public Long getId() {
+        return id;
     }
 }
